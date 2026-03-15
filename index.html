@@ -13,7 +13,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .table-container { height: calc(100vh - 380px); overflow-y: auto; }
+        .table-container { height: calc(100vh - 400px); overflow-y: auto; }
         /* Memastikan font konsisten di seluruh sel tabel */
         td, th { font-size: 0.875rem !important; } /* Equivalent to text-sm */
     </style>
@@ -58,32 +58,41 @@
         </div>
 
         <!-- Rekapitulasi Section -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-                <div class="p-3 bg-blue-100 rounded-lg text-blue-600">
-                    <i data-lucide="database"></i>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+                <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <i data-lucide="database" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Sekolah</p>
-                    <p id="totalSekolahCount" class="text-xl font-bold text-gray-800">0</p>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Total</p>
+                    <p id="totalSekolahCount" class="text-lg font-bold text-gray-800">0</p>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-                <div class="p-3 bg-green-100 rounded-lg text-green-600">
-                    <i data-lucide="check-circle"></i>
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+                <div class="p-2 bg-green-100 rounded-lg text-green-600">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Status: SUDAH</p>
-                    <p id="sudahCount" class="text-xl font-bold text-gray-800">0</p>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Sudah</p>
+                    <p id="sudahCount" class="text-lg font-bold text-gray-800">0</p>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-                <div class="p-3 bg-orange-100 rounded-lg text-orange-600">
-                    <i data-lucide="clock"></i>
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+                <div class="p-2 bg-orange-100 rounded-lg text-orange-600">
+                    <i data-lucide="clock" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Belum Upload</p>
-                    <p id="belumCount" class="text-xl font-bold text-gray-800">0</p>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Belum</p>
+                    <p id="belumCount" class="text-lg font-bold text-gray-800">0</p>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+                <div class="p-2 bg-red-100 rounded-lg text-red-600">
+                    <i data-lucide="x-circle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Tidak Ikut</p>
+                    <p id="tidakIkutCount" class="text-lg font-bold text-gray-800">0</p>
                 </div>
             </div>
         </div>
@@ -163,10 +172,12 @@
         function updateStats(data) {
             const total = data.length;
             const sudah = data.filter(item => item.keterangan.toUpperCase() === 'SUDAH').length;
-            const belum = total - sudah;
+            const tidakIkut = data.filter(item => item.keterangan.toUpperCase() === 'TIDAK IKUT').length;
+            const belum = total - sudah - tidakIkut;
 
             document.getElementById('totalSekolahCount').innerText = total;
             document.getElementById('sudahCount').innerText = sudah;
+            document.getElementById('tidakIkutCount').innerText = tidakIkut;
             document.getElementById('belumCount').innerText = belum;
         }
 
@@ -182,6 +193,13 @@
                     select.appendChild(option);
                 }
             });
+        }
+
+        function getStatusBadgeClass(status) {
+            const s = status.toUpperCase();
+            if (s === 'SUDAH') return 'bg-green-100 text-green-700 border border-green-200';
+            if (s === 'TIDAK IKUT') return 'bg-red-100 text-red-700 border border-red-200';
+            return 'bg-orange-100 text-orange-700 border border-orange-200'; // Default untuk BELUM atau lainnya
         }
 
         function renderTable(data) {
@@ -205,7 +223,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">${item.sekolah}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-mono">${item.npsn}</td>
                     <td class="px-6 py-4 text-gray-500">
-                        <span class="px-2 py-0.5 rounded text-xs font-semibold ${item.keterangan.toUpperCase() === 'SUDAH' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
+                        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-tight ${getStatusBadgeClass(item.keterangan)}">
                             ${item.keterangan}
                         </span>
                     </td>
