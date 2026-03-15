@@ -29,7 +29,7 @@
                         <i data-lucide="upload-cloud" class="text-blue-600"></i>
                         Data Sekolah Sudah Upload Peserta
                     </h1>
-                    <p class="text-gray-500 text-sm mt-1">Data real-time dari Google Spreadsheet</p>
+                    <p class="text-gray-500 text-sm mt-1 text-blue-600 font-medium">Rekapitulasi otomatis mengikuti filter aktif</p>
                 </div>
                 
                 <!-- Filter Section -->
@@ -64,7 +64,7 @@
                     <i data-lucide="database" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Total</p>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Total Tampil</p>
                     <p id="totalSekolahCount" class="text-lg font-bold text-gray-800">0</p>
                 </div>
             </div>
@@ -154,9 +154,8 @@
                         keterangan: (row[5] || '-').trim()
                     }));
                     
-                    updateStats(allData);
                     populateKomdaFilter(allData);
-                    applyFilters();
+                    applyFilters(); // Panggil filter pertama kali untuk inisialisasi rekap
                 },
                 error: function(err) {
                     console.error("Error fetching CSV:", err);
@@ -169,10 +168,11 @@
             });
         }
 
-        function updateStats(data) {
-            const total = data.length;
-            const sudah = data.filter(item => item.keterangan.toUpperCase() === 'SUDAH').length;
-            const tidakIkut = data.filter(item => item.keterangan.toUpperCase() === 'TIDAK IKUT').length;
+        // Fungsi ini sekarang menerima data yang sudah ter-filter
+        function updateStats(filteredData) {
+            const total = filteredData.length;
+            const sudah = filteredData.filter(item => item.keterangan.toUpperCase() === 'SUDAH').length;
+            const tidakIkut = filteredData.filter(item => item.keterangan.toUpperCase() === 'TIDAK IKUT').length;
             const belum = total - sudah - tidakIkut;
 
             document.getElementById('totalSekolahCount').innerText = total;
@@ -199,7 +199,7 @@
             const s = status.toUpperCase();
             if (s === 'SUDAH') return 'bg-green-100 text-green-700 border border-green-200';
             if (s === 'TIDAK IKUT') return 'bg-red-100 text-red-700 border border-red-200';
-            return 'bg-orange-100 text-orange-700 border border-orange-200'; // Default untuk BELUM atau lainnya
+            return 'bg-orange-100 text-orange-700 border border-orange-200'; 
         }
 
         function renderTable(data) {
@@ -243,6 +243,8 @@
                 return matchNpsn && matchKomda;
             });
 
+            // Update statistik berdasarkan data yang sudah difilter
+            updateStats(filtered);
             renderTable(filtered);
         }
 
