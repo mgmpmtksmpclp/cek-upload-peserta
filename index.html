@@ -29,7 +29,7 @@
                         <i data-lucide="upload-cloud" class="text-blue-600"></i>
                         Data Sekolah Sudah Upload Peserta
                     </h1>
-                    <p class="text-gray-500 text-sm mt-1 text-blue-600 font-medium">Rekapitulasi otomatis mengikuti filter aktif</p>
+                    <p class="text-gray-500 text-sm mt-1 text-blue-600 font-medium">Rekapitulasi otomatis berdasarkan data Kolom G</p>
                 </div>
                 
                 <!-- Filter Section -->
@@ -44,14 +44,14 @@
                         </div>
                     </div>
 
-                    <!-- Filter NPSN -->
+                    <!-- Filter NPSN / Status -->
                     <div class="relative w-full sm:w-64">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i data-lucide="search" class="h-4 w-4 text-gray-400"></i>
                         </div>
-                        <input type="text" id="npsnFilter" 
+                        <input type="text" id="keywordFilter" 
                             class="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" 
-                            placeholder="Cari NPSN...">
+                            placeholder="Cari NPSN atau Status...">
                     </div>
                 </div>
             </div>
@@ -70,20 +70,20 @@
             </div>
             <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
                 <div class="p-2 bg-green-100 rounded-lg text-green-600">
-                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    <i data-lucide="user-check" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Sudah</p>
-                    <p id="sudahCount" class="text-lg font-bold text-gray-800">0</p>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Mandiri</p>
+                    <p id="mandiriCount" class="text-lg font-bold text-gray-800">0</p>
                 </div>
             </div>
             <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
                 <div class="p-2 bg-orange-100 rounded-lg text-orange-600">
-                    <i data-lucide="clock" class="w-5 h-5"></i>
+                    <i data-lucide="users" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Belum</p>
-                    <p id="belumCount" class="text-lg font-bold text-gray-800">0</p>
+                    <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Panitia</p>
+                    <p id="panitiaCount" class="text-lg font-bold text-gray-800">0</p>
                 </div>
             </div>
             <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
@@ -107,14 +107,13 @@
                             <th scope="col" class="px-6 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Komda</th>
                             <th scope="col" class="px-6 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Sekolah</th>
                             <th scope="col" class="px-6 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">NPSN</th>
-                            <th scope="col" class="px-6 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Keterangan</th>
                             <th scope="col" class="px-6 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Proses Upload</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
                         <!-- Loading State -->
                         <tr>
-                            <td colspan="6" class="px-6 py-10 text-center">
+                            <td colspan="5" class="px-6 py-10 text-center">
                                 <div class="flex flex-col items-center justify-center space-y-3">
                                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                                     <p class="text-gray-500">Memuat data...</p>
@@ -152,8 +151,8 @@
                         sekolah: row[0] || '-',
                         npsn: row[1] || '-',
                         komda: row[4] || '-',
-                        keterangan: (row[5] || '-').trim(),
-                        prosesUpload: row[6] || '-' // Mengambil data dari Kolom G (index 6)
+                        // Kolom G (index 6) berisi "Mandiri", "Panitia", atau "Tidak Ikut"
+                        status: (row[6] || '-').trim()
                     }));
                     
                     populateKomdaFilter(allData);
@@ -163,7 +162,7 @@
                     console.error("Error fetching CSV:", err);
                     document.getElementById('tableBody').innerHTML = `
                         <tr>
-                            <td colspan="6" class="px-6 py-10 text-center text-red-500">Gagal memuat data.</td>
+                            <td colspan="5" class="px-6 py-10 text-center text-red-500">Gagal memuat data.</td>
                         </tr>
                     `;
                 }
@@ -172,14 +171,14 @@
 
         function updateStats(filteredData) {
             const total = filteredData.length;
-            const sudah = filteredData.filter(item => item.keterangan.toUpperCase() === 'SUDAH').length;
-            const tidakIkut = filteredData.filter(item => item.keterangan.toUpperCase() === 'TIDAK IKUT').length;
-            const belum = total - sudah - tidakIkut;
+            const mandiri = filteredData.filter(item => item.status.toUpperCase() === 'MANDIRI').length;
+            const panitia = filteredData.filter(item => item.status.toUpperCase() === 'PANITIA').length;
+            const tidakIkut = filteredData.filter(item => item.status.toUpperCase() === 'TIDAK IKUT').length;
 
             document.getElementById('totalSekolahCount').innerText = total;
-            document.getElementById('sudahCount').innerText = sudah;
+            document.getElementById('mandiriCount').innerText = mandiri;
+            document.getElementById('panitiaCount').innerText = panitia;
             document.getElementById('tidakIkutCount').innerText = tidakIkut;
-            document.getElementById('belumCount').innerText = belum;
         }
 
         function populateKomdaFilter(data) {
@@ -198,9 +197,10 @@
 
         function getStatusBadgeClass(status) {
             const s = status.toUpperCase();
-            if (s === 'SUDAH') return 'bg-green-100 text-green-700 border border-green-200';
+            if (s === 'MANDIRI') return 'bg-green-100 text-green-700 border border-green-200';
             if (s === 'TIDAK IKUT') return 'bg-red-100 text-red-700 border border-red-200';
-            return 'bg-orange-100 text-orange-700 border border-orange-200'; 
+            if (s === 'PANITIA') return 'bg-orange-100 text-orange-700 border border-orange-200';
+            return 'bg-gray-100 text-gray-700 border border-gray-200';
         }
 
         function renderTable(data) {
@@ -224,12 +224,9 @@
                     <td class="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">${item.sekolah}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-mono">${item.npsn}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-tight ${getStatusBadgeClass(item.keterangan)}">
-                            ${item.keterangan}
+                        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-tight ${getStatusBadgeClass(item.status)}">
+                            ${item.status}
                         </span>
-                    </td>
-                    <td class="px-6 py-4 text-gray-600 italic text-xs">
-                        ${item.prosesUpload}
                     </td>
                 </tr>
             `).join('');
@@ -238,20 +235,22 @@
         }
 
         function applyFilters() {
-            const npsnValue = document.getElementById('npsnFilter').value.toLowerCase();
+            const keywordValue = document.getElementById('keywordFilter').value.toLowerCase();
             const komdaValue = document.getElementById('komdaFilter').value;
 
             const filtered = allData.filter(item => {
-                const matchNpsn = item.npsn.toLowerCase().includes(npsnValue);
+                const matchKeyword = item.npsn.toLowerCase().includes(keywordValue) || 
+                                     item.status.toLowerCase().includes(keywordValue) ||
+                                     item.sekolah.toLowerCase().includes(keywordValue);
                 const matchKomda = komdaValue === "" || item.komda === komdaValue;
-                return matchNpsn && matchKomda;
+                return matchKeyword && matchKomda;
             });
 
             updateStats(filtered);
             renderTable(filtered);
         }
 
-        document.getElementById('npsnFilter').addEventListener('input', applyFilters);
+        document.getElementById('keywordFilter').addEventListener('input', applyFilters);
         document.getElementById('komdaFilter').addEventListener('change', applyFilters);
 
         window.onload = () => {
